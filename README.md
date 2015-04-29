@@ -32,4 +32,6 @@ GitHack是一个.git泄露利用脚本，通过泄露的.git文件夹下的文�
 * my[at]lijiejie.com  
 * [http://www.lijiejie.com](http://www.lijiejie.com)
 
+##Thanks##
+Thanks for sbp's great work, I used his .git index parser [gin - a Git index file parser](https://github.com/sbp/gin)
 
