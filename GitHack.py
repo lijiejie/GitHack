@@ -1,3 +1,6 @@
+#!/usr/bin/env python
+# -*- encoding: utf-8 -*-
+
 import sys
 import urllib2
 import os
@@ -6,6 +9,7 @@ import zlib
 import threading
 import Queue
 import re
+import time
 from lib.parser import parse
 
 
@@ -37,13 +41,15 @@ class Scanner(object):
             if "sha1" in entry.keys():
                 self.queue.put((entry["sha1"].strip(), entry["name"].strip()))
         self.lock = threading.Lock()
+        self.thread_count = 20
+        self.STOP_ME = False
 
     def get_back_file(self):
-        while True:
+        while not self.STOP_ME:
             try:
                 sha1, file_name = self.queue.get(timeout=0.5)
             except:
-                return
+                break
             for i in range(3):
                 try:
                     folder = '/objects/%s/' % sha1[:2]
@@ -59,17 +65,29 @@ class Scanner(object):
                     print '[OK] %s' % file_name
                     self.lock.release()
                     break
-                except KeyboardInterrupt, e:
-                    break
                 except urllib2.HTTPError, e:
                     if str(e).find('HTTP Error 404') >=0: break
                 except Exception, e:
                     pass
+        self.exit_thread()
+
+    def exit_thread(self):
+        self.lock.acquire()
+        self.thread_count -= 1
+        self.lock.release()
 
     def scan(self):
-        for i in range(20):
+        for i in range(self.thread_count):
             t = threading.Thread(target=self.get_back_file)
             t.start()
 
+
 s = Scanner()
 s.scan()
+try:
+    while s.thread_count > 0:
+        time.sleep(0.1)
+except KeyboardInterrupt, e:
+    s.STOP_ME = True
+    time.sleep(1.0)
+    print 'User Aborted.'
