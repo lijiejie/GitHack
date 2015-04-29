@@ -13,20 +13,21 @@ GitHack是一个.git泄露利用脚本，通过泄露的.git文件夹下的文�
 
 * 解析.git/index文件，找到工程中所有的： ( 文件名，文件sha1 )
 * 去.git/objects/ 文件夹下下载对应的文件
-* 使用zlib解压文件，按原始的目录结构写入源代码
+* zlib解压文件，按原始的目录结构写入源代码
 
 ## 它的优点 ##
 
 * 速度快，默认20个工作线程
-* 尽量还原所有的源代码，缺失一部分文件不影响脚本工作
-* 脚本不需要执行额外的git命令，有python就够了
+* 尽量还原所有的源代码，缺失部分文件不影响脚本工作
+* 脚本不需要执行额外的git命令，All you need is python
+* 脚本无需浏览目录
 
 ## 可能的改进##
 
 * 存在文件被gc打包到git\objects\pack的情况，稍后可测试下看能否直接获取并解压这个文件，还原源代码
 
 ##用法示例##
-    GitHack.py http://www.hoolai.com/.git/
+    GitHack.py http://www.openssl.org/.git/
 
 ##反馈##
 * my[at]lijiejie.com  
