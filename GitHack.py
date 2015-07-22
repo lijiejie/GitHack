@@ -33,16 +33,26 @@ class Scanner(object):
         if not os.path.exists(self.domain):
             os.mkdir(self.domain)
         print '[+] Download and parse index file ...'
-        data = urllib2.urlopen(sys.argv[-1] + '/index').read()
+        data = self._request_data(sys.argv[-1] + '/index')
         with open('index', 'wb') as f:
             f.write(data)
         self.queue = Queue.Queue()
         for entry in parse('index'):
             if "sha1" in entry.keys():
                 self.queue.put((entry["sha1"].strip(), entry["name"].strip()))
+                print entry['name']
         self.lock = threading.Lock()
         self.thread_count = 20
         self.STOP_ME = False
+
+    def _request_data(self, url):
+        request = urllib2.Request(url, None, {'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 6_0 like Mac OS X)'})
+        return urllib2.urlopen(request).read()
+
+    def _print(self, msg):
+        self.lock.acquire()
+        print msg
+        self.lock.release()
 
     def get_back_file(self):
         while not self.STOP_ME:
@@ -53,7 +63,7 @@ class Scanner(object):
             for i in range(3):
                 try:
                     folder = '/objects/%s/' % sha1[:2]
-                    data = urllib2.urlopen(self.base_url + folder + sha1[2:]).read()
+                    data = self._request_data(self.base_url + folder + sha1[2:])
                     data = zlib.decompress(data)
                     data = re.sub('blob \d+\00', '', data)
                     target_dir = os.path.join(self.domain, os.path.dirname(file_name) )
@@ -61,14 +71,14 @@ class Scanner(object):
                         os.makedirs(target_dir)
                     with open( os.path.join(self.domain, file_name) , 'wb') as f:
                         f.write(data)
-                    self.lock.acquire()
-                    print '[OK] %s' % file_name
-                    self.lock.release()
+                    self._print('[OK] %s' % file_name)
                     break
                 except urllib2.HTTPError, e:
-                    if str(e).find('HTTP Error 404') >=0: break
+                    if str(e).find('HTTP Error 404') >=0:
+                        self._print('[File not found] %s' % file_name)
+                        break
                 except Exception, e:
-                    pass
+                    self._print('[Error] %s' % e)
         self.exit_thread()
 
     def exit_thread(self):
