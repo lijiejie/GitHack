@@ -40,7 +40,10 @@ class Scanner(object):
         for entry in parse('index'):
             if "sha1" in entry.keys():
                 self.queue.put((entry["sha1"].strip(), entry["name"].strip()))
-                print entry['name']
+                try:
+                    print entry['name']
+                except:
+                    pass
         self.lock = threading.Lock()
         self.thread_count = 20
         self.STOP_ME = False
@@ -64,7 +67,10 @@ class Scanner(object):
                 try:
                     folder = '/objects/%s/' % sha1[:2]
                     data = self._request_data(self.base_url + folder + sha1[2:])
-                    data = zlib.decompress(data)
+                    try:
+                        data = zlib.decompress(data)
+                    except:
+                        self._print('[Error] Fail to decompress %s' % file_name)
                     data = re.sub('blob \d+\00', '', data)
                     target_dir = os.path.join(self.domain, os.path.dirname(file_name) )
                     if target_dir and not os.path.exists(target_dir):
