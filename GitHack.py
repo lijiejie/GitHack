@@ -11,8 +11,9 @@ import Queue
 import re
 import time
 from lib.parser import parse
+import ssl
 
-
+context = ssl._create_unverified_context()
 if len(sys.argv) == 1:
     msg = """
 A `.git` folder disclosure exploit. By LiJieJie
@@ -50,7 +51,7 @@ class Scanner(object):
     @staticmethod
     def _request_data(url):
         request = urllib2.Request(url, None, {'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 6_0 like Mac OS X)'})
-        return urllib2.urlopen(request).read()
+        return urllib2.urlopen(request, context=context).read()
 
     def _print(self, msg):
         self.lock.acquire()
