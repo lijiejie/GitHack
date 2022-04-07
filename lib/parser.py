@@ -13,7 +13,7 @@ import sys
 def check(boolean, message):
     if not boolean:
         import sys
-        print "error: " + message
+        print("error: " + message)
         sys.exit(1)
 
 
@@ -123,7 +123,7 @@ def parse(filename, pretty=True):
 
             padlen = (8 - (entrylen % 8)) or 8
             nuls = f.read(padlen)
-            check(set(nuls) == set(['\x00']), "padding contained non-NUL")
+            check(set(nuls) == set(['\x00']) or set(nuls) == set(b'\x00'), "padding contained non-NUL")
             
             yield entry
                 
