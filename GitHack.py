@@ -42,7 +42,7 @@ class Scanner(object):
         try:
             data = self._request_data(sys.argv[-1] + '/index')
         except Exception as e:
-            print('[ERROR] index file download file: %s' % str(e))
+            print('[ERROR] index file download failed: %s' % str(e))
             exit(-1)
         with open('index', 'wb') as f:
             f.write(data)
