@@ -11,7 +11,8 @@ GitHack是一个.git泄露利用脚本，通过泄露的.git文件夹下的文�
 
 ## Change Log
 
-* Bug fix and python3.x support.  Thanks for [Justin Steven](https://github.com/justinsteven)  \'s bug report, it's very helpful.
+* 2022-04-07：Fix abitrary file write vulnerability.  Thanks for [@justinsteven](https://github.com/justinsteven)  \'s bug report, it's very helpful.
+* 2022-04-07：Add python3.x support
 
 ## How It works ##
 
