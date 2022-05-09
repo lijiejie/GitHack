@@ -1,6 +1,9 @@
 # GitHack
 
 
+### This is important
+### All users please git pull to update source code. (2022-05-09)  
+
 GitHack is a `.git` folder disclosure exploit. 
 
 It rebuild source code from .git folder while keep directory structure unchanged.
@@ -11,7 +14,8 @@ GitHack是一个.git泄露利用脚本，通过泄露的.git文件夹下的文�
 
 ## Change Log
 
-* 2022-04-07：Fix abitrary file write vulnerability.  Thanks for [@justinsteven](https://github.com/justinsteven)  \'s bug report, it's very helpful.
+* 2022-05-09: Bug fix, thanks  [@justinsteven](https://github.com/justinsteven) . 
+* 2022-04-07：Fix arbitrary file write vulnerability.  Thanks for [@justinsteven](https://github.com/justinsteven)  \'s bug report, it's very helpful.
 * 2022-04-07：Add python3.x support
 
 ## How It works ##

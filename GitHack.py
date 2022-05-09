@@ -48,18 +48,33 @@ class Scanner(object):
             f.write(data)
         if not os.path.exists(self.domain):
             os.mkdir(self.domain)
+        self.dest_dir = os.path.abspath(self.domain)
         self.queue = Queue.Queue()
         for entry in parse('index'):
             if "sha1" in entry.keys():
-                if entry["name"].strip().find('..') < 0:
-                    self.queue.put((entry["sha1"].strip(), entry["name"].strip()))
-                try:
-                    print('[+] %s' % entry['name'])
-                except Exception as e:
-                    pass
+                entry_name = entry["name"].strip()
+                if self.is_valid_name(entry_name):
+                    self.queue.put((entry["sha1"].strip(), entry_name))
+                    try:
+                        print('[+] %s' % entry['name'])
+                    except Exception as e:
+                        pass
+
         self.lock = threading.Lock()
         self.thread_count = 10
         self.STOP_ME = False
+
+    def is_valid_name(self, entry_name):
+        if entry_name.find('..') >= 0 or \
+                entry_name.startswith('/') or \
+                entry_name.startswith('\\') or \
+                not os.path.abspath(os.path.join(self.domain, entry_name)).startswith(self.dest_dir):
+            try:
+                print('[ERROR] Invalid entry name: %s' % entry_name)
+            except Exception as e:
+                pass
+            return False
+        return True
 
     @staticmethod
     def _request_data(url):
